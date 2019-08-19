@@ -1,0 +1,46 @@
+Description: Enable federation between AWS & Okta
+Parameters:
+  AppStreamStackName:
+    Type: String
+    Description: Name of the AppStream stack
+  AppStreamAppName:
+    Type: String
+    Description: Name of the application
+  SamlMetaDataUri:
+    Type: String
+    Description: URI containing the IDP SAML metadata
+Resources:
+  SamlProvider:
+    Type: Custom::SAMLProvider
+    Properties:
+      ServiceToken: !ImportValue SamlProviderArn
+      MetaDataUri: !Ref SamlMetaDataUri
+      IdentityProviderName: !Sub OKT-${AppStreamStackName}
+  AppStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub RLE-${AppStreamStackName}
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Federated: !Ref SamlProvider
+          Action: sts:AssumeRoleWithSAML
+          Condition:
+            StringEquals:
+              SAML:sub_type: persistent
+      Policies:
+      - PolicyName: allowAppStream
+        PolicyDocument:  
+          Statement:
+          - Effect: Allow
+            Action:
+            - appstream:Stream
+            Resource: !Sub arn:aws:appstream:*:${AWS::AccountId}:stack/${AppStreamStackName}
+Outputs:
+  RoleArnAndIdpArn:
+    Description: Value to provide to Okta
+    Value: !Sub ${AppStreamRole.Arn},${SamlProvider}
+  RelayState:
+    Description: Value to provide to Okta
+    Value: !Sub https://appstream2.${AWS::Region}.aws.amazon.com/saml?stack=${AppStreamStackName}&accountId=${AWS::AccountId}&app=${AppStreamAppName}
