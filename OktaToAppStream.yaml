@@ -6,16 +6,15 @@ Parameters:
   AppStreamAppName:
     Type: String
     Description: Name of the application
-  SamlMetaDataUri:
+  SamlMetaDataDocument:
     Type: String
-    Description: URI containing the IDP SAML metadata
+    Description: Document containing the IDP SAML metadata
 Resources:
   SamlProvider:
-    Type: Custom::SAMLProvider
-    Properties:
-      ServiceToken: !ImportValue SamlProviderArn
-      MetaDataUri: !Ref SamlMetaDataUri
-      IdentityProviderName: !Sub OKT-${AppStreamStackName}
+    Type: AWS::IAM::SAMLProvider
+    Properties: 
+      Name: !Sub OKT-${AppStreamStackName}
+      SamlMetadataDocument: !Ref SamlMetaDataDocument
   AppStreamRole:
     Type: AWS::IAM::Role
     Properties:
