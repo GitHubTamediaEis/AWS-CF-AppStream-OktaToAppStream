@@ -14,7 +14,7 @@ Resources:
     Type: AWS::IAM::SAMLProvider
     Properties: 
       Name: !Sub OKT-${AppStreamStackName}
-      SamlMetadataDocument: !Ref SamlMetaDataUri
+      SamlMetadataDocument: !Ref SamlMetaDataDocument
   AppStreamRole:
     Type: AWS::IAM::Role
     Properties:
